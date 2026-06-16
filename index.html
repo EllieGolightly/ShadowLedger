@@ -34,7 +34,6 @@ html,body{
   overflow: hidden;
 }
 body{
-  position: fixed;
   width: 100%;
 }
 button,input{font:inherit}
@@ -45,10 +44,24 @@ button{border:none;background:none}
   height:100dvh;
   max-width:540px;
   margin:0 auto;
-  background:rgba(255,253,248,.72);
+  background:rgba(255,253,248,.85);
   transition:background .45s ease,box-shadow .28s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
+
+/* PC 端看板模式 */
+@media (min-height: 700px) and (min-width: 600px) {
+  #app {
+    height: 92vh;
+    margin: 4vh auto;
+    border-radius: 32px;
+    border: 1px solid var(--line);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+  }
+}
+
 .page{
   display:none;
   height:100%;
@@ -109,10 +122,8 @@ button{border:none;background:none}
   font-size:12px;
 }
 .hero{
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding:24px;
+  padding-top: calc(32px + env(safe-area-inset-top, 0px));
 }
 .hero-box{width:100%;padding:22px 20px}
 .hero-kicker{color:var(--accent);font-size:12px;letter-spacing:2px;margin-bottom:14px}
