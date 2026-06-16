@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>暗线调查</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -20,7 +20,10 @@
   --shadow:0 18px 40px rgba(54,50,44,.10);
 }
 html,body{
-  height:100%;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   background:
     linear-gradient(180deg,rgba(255,255,255,.54),rgba(255,255,255,0)),
     radial-gradient(circle at top,rgba(32,58,95,.08),transparent 34%),
@@ -28,21 +31,36 @@ html,body{
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
   transition:background .45s ease,color .24s ease;
+  overflow: hidden;
 }
-body{overflow:hidden}
+body{
+  position: fixed;
+  width: 100%;
+}
 button,input{font:inherit}
 button{border:none;background:none}
 #app{
   position:relative;
   height:100%;
+  height:100dvh;
   max-width:540px;
   margin:0 auto;
   background:rgba(255,253,248,.72);
   transition:background .45s ease,box-shadow .28s ease;
+  overflow: hidden;
 }
-.page{display:none;height:100%}
+.page{
+  display:none;
+  height:100%;
+  width: 100%;
+  flex-direction: column;
+}
 .page.active{display:flex}
-.scroll{overflow:auto}
+.scroll{
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
 .card{
   background:var(--paper);
   border:1px solid var(--line);
@@ -90,7 +108,12 @@ button{border:none;background:none}
   color:var(--muted);
   font-size:12px;
 }
-.hero{align-items:center;justify-content:center;padding:20px}
+.hero{
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+}
 .hero-box{width:100%;padding:22px 20px}
 .hero-kicker{color:var(--accent);font-size:12px;letter-spacing:2px;margin-bottom:14px}
 .hero-title{font-size:40px;font-weight:800;letter-spacing:6px;margin-bottom:10px}
@@ -129,7 +152,10 @@ button{border:none;background:none}
   backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(204,189,166,.8);
 }
-.topline-inner{padding:14px 18px 12px}
+.topline-inner{
+  padding:14px 18px 12px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+}
 .topline-label{color:var(--accent);font-size:12px;margin-bottom:5px}
 .topline-text{font-size:17px;line-height:1.55;font-weight:700}
 .topline-text,.story-block p,.narrative p,.object-card p,.result-box p,.dialogue-bubble p,.sheet-body p,.ending-sub,.speech-text{white-space:pre-wrap}
@@ -277,7 +303,12 @@ button{border:none;background:none}
 }
 .utility{display:flex;flex-wrap:wrap;gap:12px 16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .utility .link-btn{font-size:14px}
-.page-header{padding:14px 18px 8px;background:rgba(246,242,234,.94);border-bottom:1px solid rgba(204,189,166,.8)}
+.page-header{
+  padding:14px 18px 8px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background:rgba(246,242,234,.94);
+  border-bottom:1px solid rgba(204,189,166,.8);
+}
 .header-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .plain-back{color:var(--primary);cursor:pointer;font-size:14px}
 .page-title{font-size:24px;font-weight:800;margin-top:12px}
@@ -540,7 +571,7 @@ button{border:none;background:none}
 <div id="app">
   <div id="toast" class="floating"></div>
 
-  <section id="briefingPage" class="page hero active">
+  <section id="briefingPage" class="page hero scroll active">
     <div class="hero-box card">
       <div class="hero-kicker">任务编号 / A-17</div>
       <div class="hero-title">暗线调查</div>
