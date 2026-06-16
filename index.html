@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>暗线调查</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f2ea;
+  --bg-2:#eee7da;
+  --paper:#fffdf8;
+  --paper-2:#faf6ef;
+  --line:#ddd2c0;
+  --line-strong:#ccbda6;
+  --text:#223249;
+  --muted:#6f7886;
+  --primary:#203a5f;
+  --accent:#8b6a3f;
+  --shadow:0 18px 40px rgba(54,50,44,.10);
+}
+html,body{
+  height:100%;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.54),rgba(255,255,255,0)),
+    radial-gradient(circle at top,rgba(32,58,95,.08),transparent 34%),
+    linear-gradient(180deg,var(--bg),var(--bg-2));
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  transition:background .45s ease,color .24s ease;
+}
+body{overflow:hidden}
+button,input{font:inherit}
+button{border:none;background:none}
+#app{
+  position:relative;
+  height:100%;
+  max-width:540px;
+  margin:0 auto;
+  background:rgba(255,253,248,.72);
+  transition:background .45s ease,box-shadow .28s ease;
+}
+.page{display:none;height:100%}
+.page.active{display:flex}
+.scroll{overflow:auto}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:48px;
+  padding:12px 18px;
+  border-radius:16px;
+  cursor:pointer;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 12px 24px rgba(32,58,95,.18);
+}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-secondary{
+  background:var(--paper);
+  color:var(--primary);
+  border:1px solid var(--line-strong);
+}
+.link-btn{
+  color:var(--primary);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+  cursor:pointer;
+}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:var(--paper-2);
+  border:1px solid var(--line);
+  color:var(--muted);
+  font-size:12px;
+}
+.hero{align-items:center;justify-content:center;padding:20px}
+.hero-box{width:100%;padding:22px 20px}
+.hero-kicker{color:var(--accent);font-size:12px;letter-spacing:2px;margin-bottom:14px}
+.hero-title{font-size:40px;font-weight:800;letter-spacing:6px;margin-bottom:10px}
+.hero-subtitle{color:var(--muted);font-size:14px;line-height:1.8;margin-bottom:18px}
+.hero-copy{display:grid;gap:10px;font-size:15px;line-height:1.85;margin-bottom:18px}
+.hero-task{
+  display:grid;
+  gap:10px;
+  margin-bottom:18px;
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(32,58,95,.14);
+  background:linear-gradient(180deg,#fff,#f8f3ea);
+  box-shadow:0 18px 32px rgba(32,58,95,.08);
+  font-size:15px;
+  line-height:1.8;
+}
+.hero-foot{color:var(--muted);font-size:13px;margin-bottom:18px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px}
+.briefing-plan{
+  margin-bottom:18px;
+}
+.briefing-plan .btn{
+  min-width:132px;
+}
+.briefing-task-title{
+  font-size:12px;
+  color:var(--accent);
+  letter-spacing:1px;
+}
+.topline{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(246,242,234,.95);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(204,189,166,.8);
+}
+.topline-inner{padding:14px 18px 12px}
+.topline-label{color:var(--accent);font-size:12px;margin-bottom:5px}
+.topline-text{font-size:17px;line-height:1.55;font-weight:700}
+.topline-text,.story-block p,.narrative p,.object-card p,.result-box p,.dialogue-bubble p,.sheet-body p,.ending-sub,.speech-text{white-space:pre-wrap}
+.type-line{
+  opacity:0;
+  transform:translateY(6px);
+  animation:typeLineIn .24s ease forwards;
+}
+.is-typing::after{
+  content:"";
+  display:inline-block;
+  width:2px;
+  height:1em;
+  margin-left:4px;
+  vertical-align:-2px;
+  background:currentColor;
+  animation:caretBlink .9s steps(1,end) infinite;
+}
+@keyframes typeLineIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes caretBlink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+.type-locked{overflow:hidden}
+.deferred-reveal{
+  opacity:0;
+  transform:translateY(18px) scale(.985);
+  filter:none;
+  visibility:hidden;
+  pointer-events:none;
+}
+.deferred-reveal.show{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  visibility:visible;
+  pointer-events:auto;
+  transition:opacity .46s ease,transform .46s cubic-bezier(.22,.8,.2,1),box-shadow .46s ease,border-color .46s ease;
+}
+.spotlight-reveal.show{
+  box-shadow:0 24px 46px rgba(32,58,95,.16);
+  border-color:rgba(32,58,95,.28);
+}
+.pop-in{
+  animation:spotlightPanelIn .48s cubic-bezier(.2,.78,.24,1) both;
+}
+@keyframes spotlightPanelIn{
+  0%{opacity:0;transform:translateY(24px) scale(.97)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+.page-shell{display:flex;flex-direction:column;width:100%;min-height:100%}
+.content{padding:18px 18px 28px}
+.dayline{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0 18px;color:var(--muted);font-size:13px}
+.dayline strong{color:var(--text);font-size:20px}
+.story-body{display:grid;gap:18px}
+.story-block h3{font-size:12px;letter-spacing:1px;color:var(--accent);margin-bottom:8px}
+.story-block p{font-size:16px;line-height:1.9}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-strong),transparent)}
+.plan-panel{
+  margin-top:22px;
+  padding:18px;
+  border-radius:24px;
+  border:1px solid rgba(32,58,95,.14);
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(250,246,239,.95));
+  box-shadow:0 20px 36px rgba(32,58,95,.08);
+}
+.plan-panel.compact .plan-title,
+.plan-panel.compact .plan-desc{
+  display:none;
+}
+.plan-panel.compact .btn-ghost{
+  display:none;
+}
+.plan-panel.compact{
+  padding:16px 18px;
+}
+.plan-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+.plan-label{
+  color:var(--accent);
+  font-size:12px;
+  letter-spacing:1px;
+}
+.plan-title{
+  font-size:22px;
+  line-height:1.45;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.plan-desc{
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.8;
+}
+.plan-actions{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
+}
+.plan-actions.single{
+  margin-top:0;
+}
+.plan-actions.hidden{
+  display:none;
+}
+.btn-ghost{
+  min-height:46px;
+  padding:12px 16px;
+  border-radius:16px;
+  border:1px solid rgba(32,58,95,.16);
+  background:rgba(255,255,255,.8);
+  color:var(--primary);
+  cursor:pointer;
+}
+.action-wrap{margin-top:24px}
+.action-card{
+  width:100%;
+  text-align:left;
+  padding:22px 20px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at right top,rgba(255,255,255,.34),transparent 34%),
+    linear-gradient(180deg,#223a5c,#16263f);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 26px 52px rgba(20,34,56,.24);
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.action-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.36);box-shadow:0 28px 56px rgba(20,34,56,.28)}
+.action-card:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.action-kicker{display:flex;justify-content:space-between;align-items:center;gap:10px;color:rgba(255,243,225,.84);font-size:12px;margin-bottom:16px}
+.action-kicker::after{content:"→";font-size:20px;color:#fff}
+.action-card strong{display:block;font-size:26px;line-height:1.45;margin-bottom:10px;color:#fff}
+.action-card span{display:block;font-size:15px;line-height:1.8;color:rgba(234,239,246,.82)}
+.action-card.emphasis.show{
+  box-shadow:0 30px 60px rgba(20,34,56,.30);
+  border-color:rgba(255,255,255,.34);
+}
+.utility{display:flex;flex-wrap:wrap;gap:12px 16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.utility .link-btn{font-size:14px}
+.page-header{padding:14px 18px 8px;background:rgba(246,242,234,.94);border-bottom:1px solid rgba(204,189,166,.8)}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.plain-back{color:var(--primary);cursor:pointer;font-size:14px}
+.page-title{font-size:24px;font-weight:800;margin-top:12px}
+.page-sub{margin-top:6px;color:var(--muted);line-height:1.7;font-size:14px}
+.scene-shell,.dialogue-shell,.board-shell{display:flex;flex-direction:column;min-height:100%}
+.scene-content,.dialogue-content,.board-content{padding:18px;display:grid;gap:18px}
+.narrative{display:grid;gap:12px}
+.narrative p{font-size:16px;line-height:1.9}
+.object-card,.question-card,.result-box,.dialogue-bubble,.board-group{
+  padding:16px;
+  border-radius:22px;
+  border:1px solid var(--line-strong);
+  background:var(--paper);
+}
+.object-card h4,.board-group h4{font-size:18px;margin-bottom:8px}
+.object-card p,.board-group p,.question-intro,.result-box p,.dialogue-bubble p{font-size:15px;line-height:1.85}
+.object-card p,.board-group p,.question-intro{color:var(--muted)}
+.object-list,.option-list,.evidence-grid,.board-groups{display:grid;gap:12px}
+.question-title{font-size:20px;font-weight:800;line-height:1.5;margin-bottom:14px}
+.option-btn,.evidence-btn{
+  width:100%;
+  text-align:left;
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:#fbf8f2;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.option-btn:hover,.evidence-btn:hover{transform:translateY(-1px);border-color:var(--primary);background:#fff}
+.option-btn strong,.evidence-btn strong{display:block;font-size:15px;margin-bottom:6px}
+.option-btn span,.evidence-btn span{display:block;font-size:14px;line-height:1.7;color:var(--muted)}
+.option-btn .speaker{
+  display:block;
+  font-size:12px;
+  color:var(--accent);
+  margin-bottom:8px;
+}
+.option-btn-you{
+  background:linear-gradient(180deg,#fff,#f7f1e7);
+  border-color:var(--line-strong);
+}
+.result-box h4{font-size:18px;margin-bottom:10px}
+.result-box .btn{margin-top:8px}
+.board-title{font-size:14px;color:var(--accent);margin-bottom:4px}
+.choice-note{font-size:13px;color:var(--muted);line-height:1.7;margin-top:-2px}
+.dialogue-bubble{
+  max-width:88%;
+  margin-right:auto;
+  box-shadow:0 10px 22px rgba(54,50,44,.07);
+}
+.bubble-label{
+  display:block;
+  font-size:12px;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+.dialogue-result{display:grid;gap:12px}
+.dialogue-history{display:grid;gap:12px}
+.speech-row{display:flex}
+.speech-row.you{justify-content:flex-end}
+.speech{
+  max-width:88%;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  box-shadow:0 8px 18px rgba(54,50,44,.06);
+}
+.speech.you{
+  background:linear-gradient(180deg,#fff,#f7f1e7);
+  border-color:var(--line-strong);
+}
+.speech-label{
+  display:block;
+  font-size:12px;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+.speech-text{
+  display:block;
+  font-size:15px;
+  line-height:1.85;
+}
+.speech.meta{
+  background:linear-gradient(180deg,#fff,#eef3fb);
+  border-color:rgba(32,58,95,.16);
+}
+.speech.meta .speech-label{
+  color:var(--primary);
+}
+.page.action-mode{
+  background:
+    radial-gradient(circle at top,rgba(32,58,95,.10),transparent 36%),
+    linear-gradient(180deg,#e7edf5 0%,#eff2f6 38%,#f6f2ea 100%);
+}
+.page.action-mode .topline,
+.page.action-mode .page-header{
+  background:rgba(228,236,246,.92);
+  border-color:rgba(32,58,95,.12);
+}
+.page.action-mode .page-title{
+  color:var(--primary);
+}
+.phase-pill-action{
+  background:rgba(32,58,95,.08);
+  border-color:rgba(32,58,95,.18);
+  color:var(--primary);
+}
+.phase-pill-result{
+  background:rgba(139,106,63,.10);
+  border-color:rgba(139,106,63,.20);
+  color:var(--accent);
+}
+.scenePage-result .page-header,
+.scenePage-result #sceneNarrative,
+.scenePage-result .object-list,
+.scenePage-result #sceneTaskWrap,
+.dialoguePage-result .page-header,
+.dialoguePage-result #dialogueNarrative,
+.dialoguePage-result .dialogue-bubble,
+.dialoguePage-result #dialogueChoices,
+.boardPage-result .page-header,
+.boardPage-result #boardIntro,
+.boardPage-result #boardGroups,
+.boardPage-result #boardChoices{
+  display:none !important;
+}
+.scenePage-result .scene-content,
+.dialoguePage-result .dialogue-content,
+.boardPage-result .board-content{
+  min-height:calc(100vh - 86px);
+  align-content:center;
+}
+.scenePage-result #sceneResultWrap,
+.dialoguePage-result #dialogueResultWrap,
+.boardPage-result #boardResultWrap{
+  display:grid;
+}
+.result-spotlight{
+  padding:22px 18px;
+  border-radius:26px;
+  border:1px solid rgba(32,58,95,.18);
+  background:linear-gradient(180deg,#fffdf9,#f7f1e7);
+  box-shadow:0 30px 55px rgba(32,58,95,.15);
+}
+.result-kicker{
+  display:block;
+  margin-bottom:10px;
+  font-size:12px;
+  letter-spacing:1px;
+  color:var(--accent);
+}
+.result-next{
+  margin-top:16px;
+}
+.logic-map{
+  display:grid;
+  gap:14px;
+  margin-top:6px;
+}
+.logic-chain{
+  display:grid;
+  gap:12px;
+}
+.logic-node{
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(32,58,95,.14);
+  background:#fff;
+  box-shadow:0 10px 20px rgba(32,58,95,.06);
+}
+.logic-node strong{
+  display:block;
+  font-size:16px;
+  margin-bottom:4px;
+}
+.logic-node span{
+  display:block;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+.logic-arrow{
+  text-align:center;
+  color:var(--accent);
+  font-size:20px;
+  line-height:1;
+}
+.logic-final{
+  padding:18px 16px;
+  border-radius:22px;
+  border:1px solid rgba(20,34,56,.18);
+  background:linear-gradient(180deg,#223a5c,#1a2c47);
+  color:#fff;
+  box-shadow:0 18px 36px rgba(20,34,56,.22);
+}
+.logic-final .result-kicker{
+  color:rgba(255,243,225,.82);
+}
+.logic-final h4{
+  margin-bottom:8px;
+  font-size:24px;
+}
+.logic-final p{
+  color:rgba(234,239,246,.86);
+  margin:0;
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:flex-end;
+  background:rgba(25,31,38,.26);
+  z-index:50;
+}
+.overlay.show{display:flex}
+.sheet{
+  width:100%;
+  max-height:88%;
+  overflow:auto;
+  background:var(--paper);
+  border-top-left-radius:26px;
+  border-top-right-radius:26px;
+  border:1px solid var(--line);
+  box-shadow:0 -18px 40px rgba(54,50,44,.12);
+}
+.sheet-inner{padding:20px 18px 28px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.sheet-title{font-size:22px;font-weight:800}
+.sheet-body{display:grid;gap:12px}
+.sheet-body p,.fact{font-size:15px;line-height:1.85}
+.fact{padding:12px 14px;border-radius:16px;background:#faf6ef;border:1px solid var(--line)}
+.floating{
+  position:absolute;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%) translateY(-8px);
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(32,58,95,.95);
+  color:#fff;
+  font-size:12px;
+  opacity:0;
+  pointer-events:none;
+  transition:.22s;
+  z-index:60;
+}
+.floating.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ending-title{font-size:30px;line-height:1.3;font-weight:800;margin:14px 0 10px}
+.ending-sub{color:var(--muted);font-size:15px;line-height:1.85;margin-bottom:16px}
+@media (max-width:430px){
+  .hero-title{font-size:34px;letter-spacing:4px}
+  .action-card strong{font-size:20px}
+  .story-block p,.narrative p,.object-card p,.result-box p,.dialogue-bubble p{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toast" class="floating"></div>
+
+  <section id="briefingPage" class="page hero active">
+    <div class="hero-box card">
+      <div class="hero-kicker">任务编号 / A-17</div>
+      <div class="hero-title">暗线调查</div>
+      <div class="hero-subtitle">五天内查清一笔异常项目资金，到底是谁在背后拍板。</div>
+      <div id="briefingCopy" class="hero-copy"></div>
+      <div id="briefingPlan" class="briefing-plan">
+        <button id="briefingPlanBtn" class="btn btn-primary">制定方案</button>
+      </div>
+      <div id="briefingTask" class="hero-task"></div>
+      <div id="briefingFoot" class="hero-foot"></div>
+      <div id="briefingActions" class="hero-actions">
+        <button id="startBtn" class="btn btn-primary">开始调查</button>
+        <button id="openSummaryFromBriefing" class="link-btn">查看案卷摘要</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="hubPage" class="page scroll">
+    <div class="page-shell">
+      <div class="topline">
+        <div class="topline-inner">
+          <div class="topline-label">当前主线</div>
+          <div id="toplineText" class="topline-text"></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="dayline">
+          <div><strong id="dayTitle"></strong></div>
+          <div class="pill" id="dayBadge"></div>
+        </div>
+        <div class="story-body">
+          <section class="story-block">
+            <h3>刚发现什么</h3>
+            <p id="storyRecap"></p>
+          </section>
+          <div class="divider"></div>
+          <section class="story-block">
+            <h3>现在怀疑什么</h3>
+            <p id="storySuspicion"></p>
+          </section>
+          <div class="divider"></div>
+          <section id="storyNextBlock" class="story-block">
+            <h3>下一步去哪</h3>
+            <p id="storyNext"></p>
+          </section>
+        </div>
+        <div id="planPanel" class="plan-panel">
+          <div class="plan-meta">
+            <div class="plan-label">下一步安排</div>
+            <div class="pill" id="planBadge">待制定</div>
+          </div>
+          <div id="planTitle" class="plan-title"></div>
+          <div id="planDesc" class="plan-desc"></div>
+          <div id="planActions" class="plan-actions">
+            <button id="makePlanBtn" class="btn btn-primary">制定计划</button>
+            <button id="planSummaryBtn" class="btn-ghost">先看案卷摘要</button>
+          </div>
+        </div>
+        <div id="actionWrap" class="action-wrap">
+          <button id="mainActionBtn" class="action-card emphasis">
+            <div class="action-kicker">当天唯一行动</div>
+            <strong id="actionTitle"></strong>
+            <span id="actionDesc"></span>
+          </button>
+          <div class="utility">
+            <button id="openEvidenceBtn" class="link-btn">查看证据</button>
+            <button id="openCharacterBtn" class="link-btn">角色档案</button>
+            <button id="openRelationBtn" class="link-btn">关系图</button>
+            <button id="openSummaryBtn" class="link-btn">案卷摘要</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scenePage" class="page scroll">
+    <div class="scene-shell">
+      <div class="topline">
+        <div class="topline-inner">
+          <div class="topline-label">当前主线</div>
+          <div id="sceneTopline" class="topline-text"></div>
+        </div>
+      </div>
+      <div class="page-header">
+        <div class="header-row">
+          <button id="sceneBackBtn" class="plain-back">返回主界面</button>
+          <div class="pill" id="sceneDayTag"></div>
+        </div>
+        <div id="sceneTitle" class="page-title"></div>
+        <div id="sceneSub" class="page-sub"></div>
+      </div>
+      <div class="scene-content">
+        <div id="sceneNarrative" class="narrative"></div>
+        <div class="object-list">
+          <div id="sceneObjectCard" class="object-card">
+            <h4 id="sceneObjectTitle"></h4>
+            <p id="sceneObjectDesc"></p>
+            <button id="sceneStartTaskBtn" class="btn btn-primary">开始处理</button>
+          </div>
+        </div>
+        <div id="sceneTaskWrap"></div>
+        <div id="sceneResultWrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dialoguePage" class="page scroll">
+    <div class="dialogue-shell">
+      <div class="topline">
+        <div class="topline-inner">
+          <div class="topline-label">当前主线</div>
+          <div id="dialogueTopline" class="topline-text"></div>
+        </div>
+      </div>
+      <div class="page-header">
+        <div class="header-row">
+          <button id="dialogueBackBtn" class="plain-back">返回主界面</button>
+          <div class="pill" id="dialogueDayTag"></div>
+        </div>
+        <div id="dialogueTitle" class="page-title"></div>
+        <div id="dialogueSub" class="page-sub"></div>
+      </div>
+      <div class="dialogue-content">
+        <div id="dialogueNarrative" class="narrative"></div>
+        <div id="dialogueHistory" class="dialogue-history"></div>
+        <div class="dialogue-bubble">
+          <span class="bubble-label">对方</span>
+          <p id="dialogueText"></p>
+        </div>
+        <div id="dialogueChoices" class="option-list"></div>
+        <div id="dialogueResultWrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="boardPage" class="page scroll">
+    <div class="board-shell">
+      <div class="topline">
+        <div class="topline-inner">
+          <div class="topline-label">当前主线</div>
+          <div id="boardTopline" class="topline-text"></div>
+        </div>
+      </div>
+      <div class="page-header">
+        <div class="header-row">
+          <button id="boardBackBtn" class="plain-back">返回主界面</button>
+          <div class="pill">最后整理</div>
+        </div>
+        <div class="page-title">整理结论</div>
+        <div class="page-sub">把这五天查到的三条线按顺序扣到一起，再去见 X 总。</div>
+      </div>
+      <div class="board-content">
+        <div id="boardIntro" class="narrative"></div>
+        <div id="boardGroups" class="board-groups"></div>
+        <div id="boardChoices" class="evidence-grid"></div>
+        <div id="boardResultWrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="sheetOverlay" class="overlay">
+    <div class="sheet">
+      <div class="sheet-inner">
+        <div class="sheet-head">
+          <div id="sheetTitle" class="sheet-title"></div>
+          <button id="closeSheetBtn" class="plain-back">关闭</button>
+        </div>
+        <div id="sheetBody" class="sheet-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="endingOverlay" class="overlay">
+    <div class="sheet">
+      <div class="sheet-inner">
+        <div class="sheet-head">
+          <div style="flex:1;"></div>
+          <button id="closeEndingBtn" class="plain-back">收起</button>
+        </div>
+        <div id="endingGrade" class="pill"></div>
+        <div id="endingTitle" class="ending-title"></div>
+        <div id="endingBody" class="ending-sub"></div>
+        <div id="endingFacts" class="sheet-body"></div>
+        <div style="margin-top:18px;">
+          <button id="restartBtn" class="btn btn-primary">重新调查</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "darkline-v4-save";
+const DAY_THEMES = [
+  { bg: "#f6f2ea", bg2: "#eee7da", paper: "#fffdf8", paper2: "#faf6ef" },
+  { bg: "#eef1ee", bg2: "#e3e7e2", paper: "#fcfdfb", paper2: "#f4f7f3" },
+  { bg: "#edf0f5", bg2: "#e2e7f0", paper: "#fbfcfe", paper2: "#f3f6fb" },
+  { bg: "#f1edf4", bg2: "#e8e2ee", paper: "#fdfbfe", paper2: "#f5f1f9" },
+  { bg: "#f4eee9", bg2: "#ece2d8", paper: "#fffdfa", paper2: "#faf5ef" }
+];
+const TYPE_SPEED = 30;
+const PARAGRAPH_GAP = 180;
+const typewriterControllers = new WeakMap();
+let hubNarrativeJob = 0;
+
+const INTRO_COPY = [
+  "凌晨六点四十，你被临时叫回办公室。",
+  "你不是这条线原来的经办人，而是被抽调来做异常复核的调查员。组里没有正式立案，只让你先把情况摸清。",
+  "问题最早是在 A 银行内部复核时发现的。有人把同一批项目的审批页、补充协议和后续付款记录重新对了一遍，结果发现三件事彼此对不上：审批意见变过，平台公司出现得太巧，钱的去向也绕了一圈。",
+  "表面上，这条线牵着几方人：A 银行、项目公司、两家平台公司，还有一直负责对接的项目经办人。可在这些名字后面，还像藏着一个始终没正式出现的人。现在，组里先把他记成“X 总”。",
+  "你只有五天时间，先查清一件事：这到底是普通流程疏漏，还是有人提前伸了手。"
+];
+
+const BRIEFING_TASK = [
+  "先看审批是不是被动过。",
+  "再看平台是不是只是出面。",
+  "最后确认，谁才是始终没露面的那个拍板人。"
+];
+
+const SHEETS = {
+  summary: {
+    title: "案卷摘要",
+    items: [
+      "你是被临时抽调来的异常复核调查员，本案目前尚未正式立案。",
+      "异常最早在 A 银行内部复核中被发现。复核人员把同一批项目的审批页、补充协议和付款记录重新对了一遍，发现前后存在明显不一致。",
+      "目前能看到的表面关联方包括：A 银行、项目公司、两家平台公司和项目经办人。除此之外，材料里还隐约指向一个始终没正式出现的人，暂记为“X 总”。",
+      "异常集中在三处：一是审批意见前后不一致，二是平台公司反复出现在关键节点，三是后续资金去向存在绕行。",
+      "调查期限为五天。现阶段不能直接下结论，也不能过早惊动关联方。",
+      "你的任务不是立刻定性，而是先把三件事查清楚：审批有没有被动过，平台是不是替别人出面，最后是谁一直在背后拍板。"
+    ]
+  },
+  characters: {
+    title: "角色档案",
+    items: [
+      "X 总：公开身份并不直接挂在项目上，也不频繁出现在正式材料里。随着调查推进，审批、平台和利益拆分三条线都开始向他收拢。",
+      "项目经办人：最早能被接触到的人。流程很熟，话也说得最稳，但越涉及平台和名单，越容易露出停顿。",
+      "平台负责人甲：在明面上承担对接、签字和解释工作，更像一个站在前面的人，而不是决定方向的人。",
+      "平台负责人乙：与平台甲表面独立，实际出现在相近时间点和相似路径里，越看越像同一套安排里的另一层壳。",
+      "平台会计：不站在前台，但离真实台账最近。她未必知道整件事的全貌，却知道哪几笔钱在走之前要先给谁看。"
+    ]
+  },
+  relation: {
+    title: "关系图",
+    items: [
+      "A 银行批了项目，项目公司拿了钱，两家平台公司先后出现在合同和付款里。",
+      "项目经办人一直负责对接，但他并不是最后做决定的人。",
+      "平台只是站在前面的人，真正定名单、定节奏、定去向的，始终躲在后面。",
+      "随着调查推进，三条线会从审批页、资金路径和夜间会面，慢慢收拢到同一个中心人物。"
+    ]
+  }
+};
+
+const ENDINGS = {
+  A: {
+    grade: "结局 A：闭环成立",
+    title: "闭环锁定",
+    body: "你把审批改动、平台代持和利益拆分三条线完整扣到了一起。这已经不是几份彼此可疑的材料，而是一条能说明前后因果的控制链。",
+    facts: [
+      "审批改动、平台代持、利益拆分，最终都落到同一个中心人物身上。",
+      "X 总虽然没有正面承认，但到了这一步，名字已经不需要他自己补上。",
+      "你拿回去的不是猜测，而是一份足以继续往前推进的完整判断。"
+    ]
+  },
+  B: {
+    grade: "结局 B：查到问题，没扣成线",
+    title: "查到问题，没扣成线",
+    body: "你查到了审批异常，也看到了平台问题。但证据之间还有缺口，最后那层控制关系没有完全落到具体人身上。",
+    facts: [
+      "案子已经不能说没问题，却还差最后一段，没法彻底按到桌面上。",
+      "你带回去的是一份很重的疑点，而不是完整结论。上面的人看完大概会说一句\"还需要再核实\"。"
+    ]
+  },
+  C: {
+    grade: "结局 C：风声外泄",
+    title: "人先动了",
+    body: "你离答案已经不远，但对方比你更早意识到风声不对。",
+    facts: [
+      "你刚走完第一轮盘问，经办人就把消息递了出去。",
+      "材料开始转移，会面被取消，能说话的人也突然都只剩同一套回答。",
+      "你不是没查到东西，只是最后那一步，被对方提前掐断了。",
+      "案子没有结束，只是这次没能在五天里把它关上。"
+    ]
+  },
+  D: {
+    grade: "结局 D：线拉起来了，但还不够紧",
+    title: "线拉起来了，但还不够紧",
+    body: "你把几段本来分散的材料接到了一起，也让那个一直藏在后面的人开始露出影子。",
+    facts: [
+      "但整条线还不够紧。你在好几个关键节点上都没有拿稳最关键的那一块，口供不够硬，账目对得不够死。",
+      "X 总还在外面。这次收网没有完全收住。",
+      "这次调查不是没有成果，但它更像为下一次真正收口，把门先推开了一道缝。"
+    ]
+  }
+};
+
+const DAYS = [
+  {
+    title: "第 1 天：先确认这不是小问题",
+    toplineBefore: "你今天要先查清一件事：这份项目材料里的异常，到底是不是人为造成的。",
+    toplineAfter: "你刚确认：审批页确实被人动过。",
+    recapBefore: "你刚接手这份材料。第一轮复核里，审批意见、平台名字和后续去向彼此对不上，但现在还不能证明有人真的动过手。",
+    suspicionBefore: "这不像一页纸上的笔误。更像有人提前改了流程里的关键一句话，然后让整件事顺着那句话继续往前走。",
+    nextBefore: "先去 A 银行档案室，把审批页原件、会签顺序和当天的出入记录对一遍。只要确认材料被改过，这条线就能继续往下查。",
+    recapAfter: "你确认关键审批意见在正式会签前一晚被换过，原本更谨慎的说法被改成了继续推进。",
+    suspicionAfter: "能改这句话的人，不只是碰过材料那么简单。他要么在流程里有位置，要么有人替他开了门。",
+    nextAfter: "明天该去查钱是怎么走的。既然平台联系人已经提前出现过，就得看看平台公司到底是不是只是碰巧在场。",
+    actionTitle: "去 A 银行档案室",
+    actionDesc: "确认审批页有没有被人动过",
+    resultTitle: "你确认审批页被动过",
+    resultParagraphs: [
+      "两版审批页说明，关键意见在正式会签前一晚被换过。",
+      "这不是普通补充说明，而是把原本更谨慎的判断，改成了可以继续推进的方向。",
+      "你还看到，平台联系人在前后时间点都进过楼。现在虽然还不能断定他参与了改动，但这已经不是一场单纯的内部流程错误。"
+    ],
+    dayEnd: [
+      "晚上回去时，你把复印页重新装回档案袋。",
+      "到这一步，事情已经清楚了一半。问题不在于这笔项目做得漂不漂亮，而在于它一开始就被人推着往前走。",
+      "现在可以确定，这不是一次普通流程失误。",
+      "第一天结束。你已经确认：这笔项目，从审批开始就有人提前伸了手。"
+    ],
+    evidence: [
+      { id: "approval", title: "审批页改动痕迹", summary: "关键意见从“建议进一步核查”变成了“可继续推进”。" },
+      { id: "visitor", title: "访客登记异常", summary: "平台联系人在审批前后都进入过关键楼层。" }
+    ],
+    mode: "scene",
+    scene: {
+      title: "A 银行档案室",
+      subtitle: "这间屋子里没有人说多余的话，只有翻纸声和柜门开合的轻响。",
+      narrative: [
+        "档案室在旧楼三层，早上人还不多。管理员把那一批项目材料从柜里取出来，放到你面前。",
+        "纸张边缘发旧，封签也没问题。单看每一份，都像是走完了该走的流程。",
+        "但你知道，真正要看的不是“有没有材料”，而是“材料是不是一直都长这样”。",
+        "今天不是来找全部真相的。你只需要先确认一件事：审批这一步，到底有没有被人动过。"
+      ],
+      objectTitle: "两版审批页和会签顺序",
+      objectDesc: "第三份翻到中间时，你停住了。两张格式一样的审批页夹在一起，字数差不多，语气却不一样。前一版写得更谨慎，后一版干脆把那层保留拿掉了。",
+      questionIntro: "你盯着两版审批页，必须先判断，哪一处变化最能说明这不是普通补字，而是有人重新改了方向。",
+      questionTitle: "下面哪一处最值得盯住？",
+      choices: [
+        { label: "A", text: "关键意见从\u201C建议进一步核查\u201D变成了\u201C可继续推进\u201D", correct: true },
+        { label: "B", text: "审批页最后一栏的签字时间比起草日期晚了三天", correct: false },
+        { label: "C", text: "补充意见里担保方的名字被划掉重写过", correct: false }
+      ],
+      correctFeedback: [
+        "你盯住了最关键的地方。真正异常的不是字迹好不好看，而是意见本身被换了。",
+        "原本那句更谨慎的话，被改成了能把项目继续往前推的表述。",
+        "你继续往前翻，发现改动时间也不对。会签顺序显示，这句意见的变化出现在正式签字前一晚。",
+        "你顺手把当天的访客登记也翻了一遍。会签前后，同一个平台联系人都来过楼里，而且去的正是审批资料所在的楼层。"
+      ],
+      wrongFeedback: [
+        "这处变化看起来可疑，但还不够硬。",
+        "颜色和位置都可能来自复印或归档差异，只有意见本身被换掉，才足以说明这不是普通整理。",
+        "你把两版重新放在一起，又看回那句被改掉的话。真正的问题，还是出在这里。"
+      ]
+    }
+  },
+  {
+    title: "第 2 天：钱开始绕路",
+    toplineBefore: "你今天要查的，不是谁说了算，而是这些钱为什么总要先经过平台。",
+    toplineAfter: "你刚确认：项目资金先绕进平台，再回到项目链条里。",
+    recapBefore: "昨天你已经确认审批页被改过，而且平台联系人在关键时间进过楼。问题已经不只是纸面上的一句话。",
+    suspicionBefore: "如果平台公司提前出现在审批阶段，那它们后面大概率也不会只是签个名字。钱怎么走，才是今天最该看的地方。",
+    nextBefore: "去数据核验中心，把项目付款、咨询账户和平台来往对起来。只要路径一拉直，就能知道平台到底是不是只是名义上的参与方。",
+    recapAfter: "你发现项目资金先绕进平台，再回到项目链条里。平台出现的位置，和审批异常正好接上了。",
+    suspicionAfter: "平台公司不是碰巧经过，而是在替别人挡住最显眼的一层。明面上的负责人，可能根本不是决定的人。",
+    nextAfter: "明天该去见项目经办人。只有把材料和口风对起来，才能知道是谁在前面说话，谁在后面点头。",
+    actionTitle: "去数据核验中心",
+    actionDesc: "确认项目资金是不是先绕进了平台",
+    resultTitle: "你确认平台不是巧合出现",
+    resultParagraphs: [
+      "项目资金先经过咨询账户，再进入平台，最后又回到项目链条附近。",
+      "这说明平台并不是普通合作方，而是在关键一段里承担了“过桥”的作用。",
+      "问题已经从“审批有没有被改”变成了“这些平台到底替谁站在前面”。"
+    ],
+    dayEnd: [
+      "你把路径图存下来的时候，天已经黑了。",
+      "真正的问题是，这些平台为什么总能在最关键的时候，替别人接住不该由它们接住的那一段。",
+      "平台已经不像普通合作方，更像被安排在前面的壳。",
+      "第二天结束。你已经确认：平台公司不是路过，而是在替别人出面。"
+    ],
+    evidence: [
+      { id: "transfer", title: "分流路径链", summary: "项目公司的钱先走进咨询账户，再转进平台。" },
+      { id: "platform", title: "平台位置异常", summary: "平台甲和平台乙总在最关键的时间接住那一段路径。" }
+    ],
+    mode: "scene",
+    scene: {
+      title: "数据核验中心",
+      subtitle: "这里没人关心谁说了什么，只看数字最后落到哪里。",
+      narrative: [
+        "你把项目付款表、咨询费记录和平台账户流水调出来，一笔笔对时间。",
+        "审批问题可以靠纸改出来，钱的路径就没那么容易完全藏住。",
+        "屏幕上铺开的是一串又一串账户节点。项目公司付款，咨询账户收款，平台公司转出，最后又回到和项目有关的账户里。",
+        "如果这里真有问题，它不会写在抬头上，只会藏在“先到哪，再到哪”这种顺序里。"
+      ],
+      objectTitle: "异常资金路径",
+      objectDesc: "第一眼看，这几笔付款都能找到名目。可把时间拉成一条线之后，节奏变了。项目的钱刚出去，平台账户很快就接住；平台刚接住，另一头又把钱拆开转走。",
+      questionIntro: "你要在几条付款路径里找出最能说明“平台不是普通合作方”的那一条。",
+      questionTitle: "哪条路径最值得盯住？",
+      choices: [
+        { label: "A", text: "项目公司 → 咨询账户 → 设备采购商 → 项目关联账户", correct: false },
+        { label: "B", text: "项目公司 → 平台乙 → 工资代发 → 员工个人卡", correct: false },
+        { label: "C", text: "项目公司 → 咨询账户 → 平台甲 → 项目关联账户", correct: true }
+      ],
+      correctFeedback: [
+        "你抓住了真正异常的那条线。",
+        "钱先走进咨询账户，再转进平台甲，最后又回到和项目直接相关的账户里。",
+        "这不是简单多转一道手续，而是有人故意把路径做复杂，好让平台站到最前面。",
+        "你把几笔时间点对到一起，发现平台甲和平台乙虽然名字不同，但收款节奏几乎一致。"
+      ],
+      wrongFeedback: [
+        "这条路径看起来有流动，但还不足以说明平台在中间承担了不该承担的角色。",
+        "真正异常的地方，不是“钱动了”，而是“钱先借了平台的壳，再回到项目里”。"
+      ]
+    }
+  },
+  {
+    title: "第 3 天：说话的人，不一定做决定",
+    toplineBefore: "你今天要去见人，把纸面上的路径和他们嘴里的说法对起来。",
+    toplineAfter: "你刚确认：明面负责人不是真正拍板的人。",
+    recapBefore: "昨天你已经把资金路径拉出来了。平台收过钱，也把钱转了出去。它们不是摆设。",
+    suspicionBefore: "可平台负责人说话太整齐了，像在重复别人早就准备好的解释。真正决定名单和节奏的人，可能还没露面。",
+    nextBefore: "去见项目经办人。他是最早接触这条线的人，也是最可能在“做事”和“背话”之间露出破绽的人。",
+    recapAfter: "你第一次拿到口供，证明明面负责人不是真正拍板的人。",
+    suspicionAfter: "平台只是站在前面的人，真正定名单、定节奏、定去向的，另有其人。",
+    nextAfter: "明天该去追那条最隐蔽的线。只要找到谁在暗处收消息、看台账、定最后一步，那个名字就会自己浮出来。",
+    actionTitle: "去见项目经办人",
+    actionDesc: "确认明面上的人是不是只负责出面",
+    resultTitle: "你拿到第一句口供",
+    resultParagraphs: [
+      "项目经办人没有直接说出名字，但已经承认，平台负责人不是做决定的人。",
+      "这意味着你前面看到的审批改动和资金绕行，背后都有同一只手在推动。",
+      "现在的问题已经缩小到最后一步：那个始终不露面的人，到底是谁。"
+    ],
+    dayEnd: [
+      "这一天结束得比前两天更慢。",
+      "你没有拿到名字，但你终于听到了最重要的一句话：真正决定的人，从不直接出面。",
+      "到这里，整件事已经不再像一串零散异常。它开始像一条有中心的链。",
+      "第三天结束。你已经确认：说话的人在前面，做决定的人还躲在后面。"
+    ],
+    evidence: [
+      { id: "proxy", title: "经办人口供", summary: "平台负责人只是出面的人，真正决定的人另有其人。" }
+    ],
+    mode: "dialogue",
+    dialogue: {
+      title: "分行小会议室",
+      subtitle: "会面在分行旁边的小会议室。门一关，屋里只剩空调声。",
+      narrative: [
+        "项目经办人坐得很直，说话不快，每句都像提前想过。",
+        "他先说项目都走过正常流程，又说平台只是配合推进，没参与核心决策。",
+        "话听着没问题，但和你手里的东西对不上。",
+        "今天不是来听他背流程的。你要看的，是他在哪一句开始不敢往下说。",
+        "但你心里清楚——眼前这个人不是终点。他后面还有人。问的时候不能让他觉得事情已经大到捂不住了，否则他会通知那一边。"
+      ],
+      steps: [
+        {
+          prompt: "你先怎么开口？",
+          baseText: "他把手搭在桌上，等你先开口。",
+          choices: [
+            { label: "A", text: "先不提证据，问他审批那晚为什么流程突然提速", response: "他说记不清具体时间，但表情已经变了。你提到\u201C那一晚\u201D时，他下意识停了一秒。" },
+            { label: "B", text: "直接把资金路径放到桌上", response: "他看了一眼表格，没有否认路径，但立刻把话题拉回\u201C正常合作\u201D。他开始防你了。" },
+            { label: "C", text: "先问平台负责人和他是什么关系", response: "他回答得很快，像准备过一样。关系没说清，反而把自己藏得更深。" }
+          ]
+        },
+        {
+          prompt: "现在你决定把哪张牌亮出来？",
+          baseText: "你已经看见他开始收口，这时候该把真正的东西摆上来了。",
+          choices: [
+            { label: "A", text: "把两版审批页放到桌上", response: "他看到改动时间，先否认自己能碰材料，随后又补了一句：“那不是我能决定的。”" },
+            { label: "B", text: "把平台回流路径放到桌上", response: "他不再否认平台参与，只说“那边只是帮忙”。但他说“帮忙”时，眼神明显往下躲了。" },
+            { label: "C", text: "把聊天记录截图放到桌上", response: "他脸色第一次沉下来。截图里那句“名单不是我定的”，正好打在他最不愿意碰的地方。" }
+          ]
+        },
+        {
+          prompt: "你最后追哪一句？",
+          baseText: "他已经撑不住完全平静了，你只差最后一句能把口子撕开。",
+          choices: [
+            { label: "A", text: "“不是你定的，那是谁定的？”", response: "他沉默了很久，终于把手从桌面上收了回去。" },
+            { label: "B", text: "“平台到底替谁站在前面？”", response: "他没立刻看你，像是在心里算还能挡多久。" },
+            { label: "C", text: "“你只要告诉我，最后拍板的人是不是一直没露面。”", response: "这句话一出来，他第一次没有立刻接话。" }
+          ],
+          finalText: [
+            "“平台那边的人，不是来做决定的。”",
+            "“他们只是站在前面。真正点头的人，从来不直接出现。”",
+            "这句话一出来，前面两天的材料就都对上了。"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    title: "第 4 天：最后那层人开始露影子",
+    toplineBefore: "你今天要追的，不是一笔钱，也不是一句口供，而是那条一直在暗处传话的线。",
+    toplineAfter: "你刚确认：每笔关键付款都要先给同一个人过目。",
+    recapBefore: "昨天你已经听到经办人承认，平台负责人不是做决定的人。到这里，前台和后台已经分开了。",
+    suspicionBefore: "如果有人一直躲在后面，他就不需要经手每一步，只要卡住最关键的几次点头。你今天要找的，就是那条看不见的传话链。",
+    nextBefore: "去夜间私下会面点。你已经拿到足够多的白天材料，接下来该看的是，谁在晚上碰头，谁在最后看账。",
+    recapAfter: "你发现每笔关键付款都要先给同一个人过目，会面之后，利益拆分比例也立刻固定了。",
+    suspicionAfter: "那个始终没出现在纸面上的人，不只是知道这条线，而是在最后决定这条线怎么走。",
+    nextAfter: "明天该把三条线补到一起，然后正面把名字逼出来。只要最后一块证据能落上去，这条链就闭合了。",
+    actionTitle: "去夜间私下会面点",
+    actionDesc: "确认谁在暗处接消息、看最后的账",
+    resultTitle: "你找到最后一层传话链",
+    resultParagraphs: [
+      "夜间会面记录和拆分台账对上了。",
+      "会面之后，利益拆分比例立刻固定，几笔关键付款也都带着同一个代号。",
+      "这说明前面那批人并不是各自做决定，他们在等同一个人最后点头。"
+    ],
+    dayEnd: [
+      "你离开茶室的时候，街上已经没什么人了。",
+      "前几天查到的是痕迹、路径和口风，今天你第一次碰到了真正的中心。",
+      "他没有名字，没有签字，也不在正式材料里出现。但整条线都在绕着他转。",
+      "第四天结束。你已经确认：这不是几个人各自做事，而是有人一直在最后拍板。"
+    ],
+    evidence: [
+      { id: "secret", title: "夜间会面记录", summary: "会面当晚之后，平台台账里的拆分比例立刻固定下来。" },
+      { id: "ledger", title: "分配台账", summary: "每笔关键付款都带着同一个代号，像是在等同一个人过目。" }
+    ],
+    mode: "scene",
+    scene: {
+      title: "夜间私下会面点",
+      subtitle: "地点不在正式会客区，也不在办公楼里。",
+      narrative: [
+        "是一家离分行不远的老茶室，门口不显眼，监控也不多。",
+        "你不是来抓现行的。你只是要确认，前面几天一直没露面的那个人，是不是真的在这里留下了痕迹。",
+        "包间记录被抄得很干净，前台嘴也很紧。",
+        "但夜里的事和白天不同。只要有人来过，总会留下一点比他自己以为更多的东西。"
+      ],
+      objectTitle: "预约单、出入时间和拆分台账",
+      objectDesc: "你先看到的是一张模糊的预约单，接着是一段对不上公开行程的出入时间，最后，是一份从平台会计手里流出来的拆分台账。前两样只能说明有人私下碰过面，第三样才真正把人往中间拽。",
+      questionIntro: "下面哪条信息，最能把“私下会面”和“利益去向”连到一起？",
+      questionTitle: "你应该先盯住哪一条？",
+      choices: [
+        { label: "A", text: "包间预约记录存在多处手动涂改痕迹", correct: false },
+        { label: "B", text: "服务员回忆包间里有人提到\u201C最后过目\u201D之类的话", correct: false },
+        { label: "C", text: "会面当晚之后，平台台账里的拆分比例立即固定下来", correct: true }
+      ],
+      correctFeedback: [
+        "你抓住了真正有用的那条线。",
+        "会面之后，平台台账里的拆分比例立刻固定下来，说明那场见面不是闲聊，而是把后面的利益安排定死了。",
+        "这意味着，那个没露面的核心人物，不只是听汇报，而是在最后拍板。",
+        "你把台账往前后各翻了几页，更关键的是，几笔关键付款都备注了同一个简短代号。"
+      ],
+      wrongFeedback: [
+        "这些细节可以补气氛，但还不能把会面和控制关系真正连起来。",
+        "真正有力的，不是谁喝了什么茶，而是会面结束后，账是怎么立刻变的。"
+      ]
+    }
+  },
+  {
+    title: "第 5 天：最后把名字按在这条线上",
+    toplineBefore: "今天要做的不是再多查一条线，而是把已经查到的三条线扣到一起。",
+    toplineAfter: "你刚确认：审批、平台和利益去向，都指向同一个拍板人。",
+    recapBefore: "你已经确认，审批被改过，平台替人出面，夜间会面之后利益拆分也立刻固定下来。",
+    suspicionBefore: "如果这些都指向同一个中心人物，那剩下最后一步不是“再怀疑一次”，而是把链条完整摆出来，让对方没法继续躲。",
+    nextBefore: "先整理结论，再去见 X 总。只要把三条线按顺序摆到桌上，他就很难再把自己留在纸面之外。",
+    recapAfter: "你已经把审批、平台和利益去向三条线补到了一起。",
+    suspicionAfter: "整条链已经不是零散怀疑，而是指向同一个拍板人的完整判断。",
+    nextAfter: "这次不是再多查一条线，而是把你已经拿到的东西按顺序摆到 X 总面前。",
+    actionTitle: "整理结论并去见 X 总",
+    actionDesc: "把三条线合成一个完整判断",
+    resultTitle: "三条线已经闭合",
+    resultParagraphs: [
+      "审批改动、平台代持、利益拆分，最终都落到同一个中心人物身上。",
+      "这条线已经不再是零散怀疑，而是一条完整的控制链。",
+      "你手里拿到的，不只是问题，而是足以让问题落到具体人身上的判断。"
+    ],
+    dayEnd: [
+      "五天前，你拿到的只是一叠彼此对不上的材料。",
+      "五天后，你把它们变成了一条能说清前后因果的线。",
+      "谁改了审批，谁站在前面，谁在最后点头，现在都不再是分开的问号。它们已经连成了同一个答案。",
+      "第五天结束。你已经把那个一直没写在纸面上的名字，按回了这条线里。"
+    ],
+    mode: "board",
+    board: {
+      intro: [
+        "你把这五天里拿到的材料按顺序排开。",
+        "先是审批页，再是资金路径，再是口供和夜间台账。单看每一份，它们都只说明一小段。",
+        "但一旦放到同一条线上，它们说的是同一件事。",
+        "现在你不是在找新东西，而是在决定，哪三块最能把整条链扣死。"
+      ],
+      groups: [
+        {
+          key: "approval",
+          title: "审批有没有被人动过",
+          hint: "把审批页改动和时间点放在一起。",
+          options: [
+            { id: "visitor", title: "访客登记异常", text: "平台联系人在审批前后都进入过关键楼层。", correct: false },
+            { id: "approval", title: "审批页改动痕迹", text: "关键意见从\u201C建议进一步核查\u201D变成了\u201C可继续推进\u201D。", correct: true },
+            { id: "platform", title: "平台位置异常", text: "平台总在关键时间接住那一段路径。", correct: false }
+          ]
+        },
+        {
+          key: "platform",
+          title: "平台是不是在替别人出面",
+          hint: "把回流路径和经办人口供放在一起。",
+          options: [
+            { id: "proxy", title: "经办人口供", text: "平台负责人只是出面的人，真正决定的人另有其人。", correct: false },
+            { id: "approval", title: "审批页改动痕迹", text: "关键意见被改成了继续推进。", correct: false },
+            { id: "transfer", title: "分流路径链", text: "项目公司的钱先走进咨询账户，再转进平台。", correct: true }
+          ]
+        },
+        {
+          key: "control",
+          title: "谁才是真正拍板的人",
+          hint: "把夜间会面、拆分台账和最后那句口供放在一起。",
+          options: [
+            { id: "secret", title: "夜间会面记录", text: "会面当晚之后，拆分比例立刻固定。", correct: false },
+            { id: "ledger", title: "分配台账", text: "每笔关键付款都带着同一个代号，像是在等同一个人过目。", correct: true },
+            { id: "visitor", title: "访客登记异常", text: "平台联系人进入过关键楼层。", correct: false }
+          ]
+        }
+      ],
+      wrongText: "这张材料能说明异常存在，但还不够直接，暂时扣不住这一条。",
+      success: [
+        "你把三条线排完，整个结构第一次清清楚楚地立了起来。",
+        "审批改动不是孤立动作，它替后面的路径让了路。",
+        "平台不是普通参与方，它替后面的人挡住了最显眼的一层。",
+        "而真正拍板的人，从头到尾都没有签名，却决定了每一步怎么往下走。"
+      ],
+      confrontation: [
+        "见面安排得很短，地方也很普通。X 总没有表现出意外，只是比你想象中更安静。",
+        "你把三条线按顺序摆完，最后只说了一句：",
+        "“改审批的人，替你把门打开；站在前面的人，替你把视线挡住；看最后这本账的人，才是真正决定钱往哪去的人。”",
+        "“这五天里，所有东西都指向同一个人。”",
+        "“这个人，就是你。”",
+        "房间里安静了几秒。X 总没有立刻反驳，也没有把材料推回来。",
+        "“你走到这里，不容易。”",
+        "这不是承认，但也已经不是否认。"
+      ]
+    }
+  }
+];
+
+function initState() {
+  return {
+    day: 1,
+    page: "briefing",
+    actionCompleted: false,
+    sceneQuestionOpen: false,
+    sceneResultVisible: false,
+    sceneRetryVisible: false,
+    dialogueStep: 0,
+    dialogueInterlude: false,
+    dialogueResultVisible: false,
+    dialogueLastChoice: "",
+    dialogueLastResponse: "",
+    dialogueHistory: [],
+    briefingPlanReady: false,
+    planReady: false,
+    boardSelections: { approval: null, platform: null, control: null },
+    boardMessage: "",
+    boardCompleted: false,
+    earnedEvidence: [],
+    ending: null,
+    // 隐藏数值系统
+    d1Score: 0,
+    d2Score: 0,
+    d3Round1: null,
+    d3Round3: null,
+    d3OptimalCount: 0,
+    d4Score: 0,
+    d5Retries: 0,
+    leakTriggered: false
+  };
+}
+
+let state = initState();
+
+const el = {
+  briefingPage: document.getElementById("briefingPage"),
+  hubPage: document.getElementById("hubPage"),
+  scenePage: document.getElementById("scenePage"),
+  dialoguePage: document.getElementById("dialoguePage"),
+  boardPage: document.getElementById("boardPage"),
+  toast: document.getElementById("toast"),
+  briefingCopy: document.getElementById("briefingCopy"),
+  briefingPlan: document.getElementById("briefingPlan"),
+  briefingPlanBtn: document.getElementById("briefingPlanBtn"),
+  briefingTask: document.getElementById("briefingTask"),
+  briefingFoot: document.getElementById("briefingFoot"),
+  briefingActions: document.getElementById("briefingActions"),
+  startBtn: document.getElementById("startBtn"),
+  openSummaryFromBriefing: document.getElementById("openSummaryFromBriefing"),
+  toplineText: document.getElementById("toplineText"),
+  dayTitle: document.getElementById("dayTitle"),
+  dayBadge: document.getElementById("dayBadge"),
+  storyRecap: document.getElementById("storyRecap"),
+  storySuspicion: document.getElementById("storySuspicion"),
+  storyNextBlock: document.getElementById("storyNextBlock"),
+  storyNext: document.getElementById("storyNext"),
+  planPanel: document.getElementById("planPanel"),
+  planBadge: document.getElementById("planBadge"),
+  planTitle: document.getElementById("planTitle"),
+  planDesc: document.getElementById("planDesc"),
+  planActions: document.getElementById("planActions"),
+  makePlanBtn: document.getElementById("makePlanBtn"),
+  planSummaryBtn: document.getElementById("planSummaryBtn"),
+  actionWrap: document.getElementById("actionWrap"),
+  mainActionBtn: document.getElementById("mainActionBtn"),
+  actionTitle: document.getElementById("actionTitle"),
+  actionDesc: document.getElementById("actionDesc"),
+  openEvidenceBtn: document.getElementById("openEvidenceBtn"),
+  openCharacterBtn: document.getElementById("openCharacterBtn"),
+  openRelationBtn: document.getElementById("openRelationBtn"),
+  openSummaryBtn: document.getElementById("openSummaryBtn"),
+  sceneTopline: document.getElementById("sceneTopline"),
+  sceneDayTag: document.getElementById("sceneDayTag"),
+  sceneTitle: document.getElementById("sceneTitle"),
+  sceneSub: document.getElementById("sceneSub"),
+  sceneNarrative: document.getElementById("sceneNarrative"),
+  sceneObjectCard: document.getElementById("sceneObjectCard"),
+  sceneObjectTitle: document.getElementById("sceneObjectTitle"),
+  sceneObjectDesc: document.getElementById("sceneObjectDesc"),
+  sceneStartTaskBtn: document.getElementById("sceneStartTaskBtn"),
+  sceneTaskWrap: document.getElementById("sceneTaskWrap"),
+  sceneResultWrap: document.getElementById("sceneResultWrap"),
+  sceneBackBtn: document.getElementById("sceneBackBtn"),
+  dialogueTopline: document.getElementById("dialogueTopline"),
+  dialogueDayTag: document.getElementById("dialogueDayTag"),
+  dialogueTitle: document.getElementById("dialogueTitle"),
+  dialogueSub: document.getElementById("dialogueSub"),
+  dialogueNarrative: document.getElementById("dialogueNarrative"),
+  dialogueHistory: document.getElementById("dialogueHistory"),
+  dialogueText: document.getElementById("dialogueText"),
+  dialogueChoices: document.getElementById("dialogueChoices"),
+  dialogueResultWrap: document.getElementById("dialogueResultWrap"),
+  dialogueBackBtn: document.getElementById("dialogueBackBtn"),
+  boardTopline: document.getElementById("boardTopline"),
+  boardIntro: document.getElementById("boardIntro"),
+  boardGroups: document.getElementById("boardGroups"),
+  boardChoices: document.getElementById("boardChoices"),
+  boardResultWrap: document.getElementById("boardResultWrap"),
+  boardBackBtn: document.getElementById("boardBackBtn"),
+  sheetOverlay: document.getElementById("sheetOverlay"),
+  sheetTitle: document.getElementById("sheetTitle"),
+  sheetBody: document.getElementById("sheetBody"),
+  closeSheetBtn: document.getElementById("closeSheetBtn"),
+  endingOverlay: document.getElementById("endingOverlay"),
+  endingGrade: document.getElementById("endingGrade"),
+  endingTitle: document.getElementById("endingTitle"),
+  endingBody: document.getElementById("endingBody"),
+  endingFacts: document.getElementById("endingFacts"),
+  closeEndingBtn: document.getElementById("closeEndingBtn"),
+  restartBtn: document.getElementById("restartBtn")
+};
+
+function currentDay() {
+  return DAYS[state.day - 1];
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function stopTypewriter(node) {
+  const active = typewriterControllers.get(node);
+  if (active) active.cancelled = true;
+  node.classList.remove("is-typing");
+}
+
+function beginTypewriter(node, signature) {
+  stopTypewriter(node);
+  const controller = { cancelled: false };
+  typewriterControllers.set(node, controller);
+  node.dataset.typeSignature = signature;
+  return controller;
+}
+
+function setPlainText(node, text, key) {
+  stopTypewriter(node);
+  node.style.minHeight = "";
+  node.classList.remove("type-locked");
+  node.textContent = text || "";
+  node.dataset.typeSignature = `${key}::${text || ""}`;
+}
+
+function measureNodeHeight(node, buildContent) {
+  const width = node.getBoundingClientRect().width || node.parentElement?.getBoundingClientRect().width || 0;
+  const clone = node.cloneNode(false);
+  clone.style.position = "absolute";
+  clone.style.visibility = "hidden";
+  clone.style.pointerEvents = "none";
+  clone.style.left = "-9999px";
+  clone.style.top = "0";
+  clone.style.height = "auto";
+  clone.style.minHeight = "0";
+  clone.style.maxHeight = "none";
+  clone.style.width = `${Math.max(width, 1)}px`;
+  clone.classList.remove("is-typing");
+  clone.classList.remove("type-locked");
+  buildContent(clone);
+  document.body.appendChild(clone);
+  const height = clone.getBoundingClientRect().height;
+  clone.remove();
+  return height;
+}
+
+function lockNodeHeight(node, buildContent) {
+  const height = measureNodeHeight(node, buildContent);
+  if (height > 0) {
+    node.style.minHeight = `${Math.ceil(height)}px`;
+    node.classList.add("type-locked");
+  }
+}
+
+function prepareReveal(node, spotlight = false) {
+  if (!node) return;
+  node.classList.add("deferred-reveal");
+  node.classList.remove("show");
+  node.classList.toggle("spotlight-reveal", spotlight);
+}
+
+function showReveal(node, delay = 0) {
+  if (!node) return;
+  window.setTimeout(() => {
+    requestAnimationFrame(() => {
+      node.classList.add("show");
+      node.style.visibility = "visible";
+    });
+  }, delay);
+}
+
+function setPageStage(pageNode, stage) {
+  if (!pageNode) return;
+  pageNode.classList.remove("action-mode", "scenePage-result", "dialoguePage-result", "boardPage-result");
+  if (stage === "action") pageNode.classList.add("action-mode");
+  if (stage === "scene-result") pageNode.classList.add("scenePage-result");
+  if (stage === "dialogue-result") pageNode.classList.add("dialoguePage-result");
+  if (stage === "board-result") pageNode.classList.add("boardPage-result");
+}
+
+function typeText(node, text, key) {
+  const safeText = text || "";
+  const signature = `${key}::${safeText}`;
+  if (node.dataset.typeSignature === signature) return;
+  const controller = beginTypewriter(node, signature);
+  lockNodeHeight(node, (clone) => {
+    clone.textContent = safeText;
+  });
+  node.textContent = "";
+  node.classList.add("is-typing");
+  let index = 0;
+  const tick = () => {
+    if (controller.cancelled) return;
+    index += 1;
+    node.textContent = safeText.slice(0, index);
+    if (index < safeText.length) {
+      setTimeout(tick, TYPE_SPEED);
+    } else {
+      node.classList.remove("is-typing");
+    }
+  };
+  if (!safeText) {
+    node.classList.remove("is-typing");
+    return;
+  }
+  tick();
+}
+
+function typeParagraphs(node, texts, key, onDone) {
+  const lines = Array.isArray(texts) ? texts : [];
+  const signature = `${key}::${lines.join("||")}`;
+  if (node.dataset.typeSignature === signature) {
+    if (onDone) onDone();
+    return;
+  }
+  const controller = beginTypewriter(node, signature);
+  lockNodeHeight(node, (clone) => {
+    clone.innerHTML = lines.map((text) => `<p>${escapeHTML(text)}</p>`).join("");
+  });
+  node.innerHTML = "";
+  let lineIndex = 0;
+  const renderLine = () => {
+    if (controller.cancelled || lineIndex >= lines.length) return;
+    const paragraph = document.createElement("p");
+    paragraph.className = "type-line";
+    node.appendChild(paragraph);
+    const line = lines[lineIndex] || "";
+    let charIndex = 0;
+    paragraph.classList.add("is-typing");
+    const tick = () => {
+      if (controller.cancelled) return;
+      charIndex += 1;
+      paragraph.textContent = line.slice(0, charIndex);
+      if (charIndex < line.length) {
+        setTimeout(tick, TYPE_SPEED);
+        return;
+      }
+      paragraph.classList.remove("is-typing");
+      lineIndex += 1;
+      if (lineIndex < lines.length) {
+        setTimeout(renderLine, PARAGRAPH_GAP);
+      } else if (onDone) {
+        onDone();
+      }
+    };
+    if (!line) {
+      paragraph.classList.remove("is-typing");
+      lineIndex += 1;
+      if (lineIndex < lines.length) {
+        setTimeout(renderLine, PARAGRAPH_GAP);
+      } else if (onDone) {
+        onDone();
+      }
+      return;
+    }
+    tick();
+  };
+  if (!lines.length) {
+    if (onDone) onDone();
+    return;
+  }
+  renderLine();
+}
+
+function typeTextSequence(items, key, onDone) {
+  const signature = `${key}::${items.map((item) => item.text || "").join("||")}`;
+  if (items.every((item) => item.node.dataset.typeSignature === `${item.key}::${item.text || ""}`)) {
+    if (onDone) onDone();
+    return;
+  }
+  const jobId = ++hubNarrativeJob;
+  items.forEach((item) => {
+    stopTypewriter(item.node);
+    lockNodeHeight(item.node, (clone) => {
+      clone.textContent = item.text || "";
+    });
+    item.node.textContent = "";
+    item.node.dataset.sequenceSignature = signature;
+  });
+  const run = (index) => {
+    if (jobId !== hubNarrativeJob || index >= items.length) return;
+    const item = items[index];
+    const safeText = item.text || "";
+    const signatureItem = `${item.key}::${safeText}`;
+    const controller = beginTypewriter(item.node, signatureItem);
+    item.node.classList.add("is-typing");
+    let charIndex = 0;
+    const tick = () => {
+      if (controller.cancelled || jobId !== hubNarrativeJob) return;
+      charIndex += 1;
+      item.node.textContent = safeText.slice(0, charIndex);
+      if (charIndex < safeText.length) {
+        setTimeout(tick, TYPE_SPEED);
+        return;
+      }
+      item.node.classList.remove("is-typing");
+      if (index + 1 < items.length) {
+        setTimeout(() => run(index + 1), PARAGRAPH_GAP);
+      } else if (onDone) {
+        onDone();
+      }
+    };
+    if (!safeText) {
+      item.node.classList.remove("is-typing");
+      if (index + 1 < items.length) {
+        setTimeout(() => run(index + 1), PARAGRAPH_GAP);
+      } else if (onDone) {
+        onDone();
+      }
+      return;
+    }
+    tick();
+  };
+  run(0);
+}
+
+function applyTheme() {
+  const theme = DAY_THEMES[Math.min(state.day - 1, DAY_THEMES.length - 1)] || DAY_THEMES[0];
+  const root = document.documentElement;
+  root.style.setProperty("--bg", theme.bg);
+  root.style.setProperty("--bg-2", theme.bg2);
+  root.style.setProperty("--paper", theme.paper);
+  root.style.setProperty("--paper-2", theme.paper2);
+}
+
+function speechBubble(label, text, side, kind = "speech") {
+  return `
+    <div class="speech-row ${side}">
+      <div class="speech ${side} ${kind === "meta" ? "meta" : ""}">
+        <span class="speech-label">${escapeHTML(label)}</span>
+        <span class="speech-text">${escapeHTML(text)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    state = { ...initState(), ...JSON.parse(raw) };
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function clearState() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function showToast(text) {
+  el.toast.textContent = text;
+  el.toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => el.toast.classList.remove("show"), 1800);
+}
+
+function switchPage(page) {
+  state.page = page;
+  [el.briefingPage, el.hubPage, el.scenePage, el.dialoguePage, el.boardPage].forEach((node) => node.classList.remove("active"));
+  if (page === "briefing") el.briefingPage.classList.add("active");
+  if (page === "hub") el.hubPage.classList.add("active");
+  if (page === "scene") el.scenePage.classList.add("active");
+  if (page === "dialogue") el.dialoguePage.classList.add("active");
+  if (page === "board") el.boardPage.classList.add("active");
+}
+
+function addEvidence(items) {
+  items.forEach((item) => {
+    if (!state.earnedEvidence.some((e) => e.id === item.id)) {
+      state.earnedEvidence.push(item);
+    }
+  });
+}
+
+function openSheet(title, items) {
+  el.sheetTitle.textContent = title;
+  el.sheetBody.innerHTML = items.map((text) => `<p>${text}</p>`).join("");
+  el.sheetOverlay.classList.add("show");
+}
+
+function buildResultBox(title, paragraphs, buttonText, action) {
+  return `
+    <div class="result-box result-spotlight pop-in">
+      <span class="result-kicker">新的发现</span>
+      <h4>${title}</h4>
+      ${paragraphs.map((text) => `<p>${text}</p>`).join("")}
+      <button class="btn btn-primary result-next" data-result-action="${action}">${buttonText}</button>
+    </div>
+  `;
+}
+
+function getProgressButtonText() {
+  return state.day < 5 ? `进入第 ${state.day + 1} 天` : "查看最终结论";
+}
+
+function buildBriefingTaskCard() {
+  return `
+    <div class="briefing-task-title">调查脉络</div>
+    ${BRIEFING_TASK.map((text) => `<div>• ${text}</div>`).join("")}
+  `;
+}
+
+function buildLogicMap(board) {
+  const groups = board.groups.map((group) => {
+    const selectedId = state.boardSelections[group.key];
+    const selected = group.options.find((item) => item.id === selectedId) || group.options.find((item) => item.correct);
+    return {
+      title: group.title,
+      evidence: selected ? selected.title : "关键材料"
+    };
+  });
+  return `
+    <div class="logic-map">
+      <div class="logic-chain">
+        ${groups.map((item, index) => `
+          <div class="logic-node">
+            <strong>${item.title}</strong>
+            <span>${item.evidence}</span>
+          </div>
+          ${index < groups.length - 1 ? '<div class="logic-arrow">↓</div>' : ""}
+        `).join("")}
+      </div>
+      <div class="logic-final">
+        <span class="result-kicker">推导结果</span>
+        <h4>都指向同一个拍板人</h4>
+        <p>审批被改动，平台站在前面，利益拆分等待最后过目。三条线最后收拢到同一个中心。</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderDialogueHistory() {
+  el.dialogueHistory.innerHTML = state.dialogueHistory.map((item) => speechBubble(item.label, item.text, item.side, item.kind)).join("");
+}
+
+function renderBriefing() {
+  prepareReveal(el.briefingPlan, false);
+  prepareReveal(el.briefingTask, true);
+  prepareReveal(el.briefingActions, false);
+  typeParagraphs(el.briefingCopy, INTRO_COPY, "briefing-copy", () => {
+    showReveal(el.briefingPlan, 120);
+    if (state.briefingPlanReady) {
+      showReveal(el.briefingTask, 220);
+      showReveal(el.briefingActions, 380);
+    }
+  });
+  el.briefingTask.innerHTML = buildBriefingTaskCard();
+  el.briefingFoot.textContent = "五天之后，你要给出的是判断，不是猜测。";
+  if (!state.briefingPlanReady) {
+    el.briefingTask.classList.remove("show");
+    el.briefingTask.style.visibility = "hidden";
+    el.briefingActions.classList.remove("show");
+    el.briefingActions.style.visibility = "hidden";
+  } else {
+    el.briefingTask.style.visibility = "visible";
+    el.briefingActions.style.visibility = "visible";
+  }
+}
+
+function renderHub() {
+  const day = currentDay();
+  const completed = state.actionCompleted;
+  setPlainText(el.toplineText, completed ? day.toplineAfter : day.toplineBefore, `hub-topline-${state.day}-${completed}`);
+  el.dayTitle.textContent = day.title;
+  el.dayBadge.textContent = completed ? "当日已推进" : "尚未行动";
+  el.storyNextBlock.style.display = "none";
+  el.planTitle.textContent = completed ? "今天的关键推进已经完成" : "制定计划";
+  el.planDesc.textContent = completed ? "你已经拿到今天的新发现，可以直接进入下一天继续推进。" : `下一步安排：${day.nextBefore}`;
+  el.planBadge.textContent = completed ? "已完成" : (state.planReady ? "计划已定" : "待制定");
+  el.makePlanBtn.textContent = completed ? getProgressButtonText() : "制定计划";
+  el.planPanel.classList.toggle("compact", !completed && !state.planReady);
+  el.planActions.classList.toggle("single", !completed && !state.planReady);
+  el.planActions.classList.toggle("hidden", !completed && state.planReady);
+  prepareReveal(el.planPanel, true);
+  prepareReveal(el.actionWrap, true);
+  typeTextSequence([
+    { node: el.storyRecap, text: completed ? day.recapAfter : day.recapBefore, key: `hub-recap-${state.day}-${completed}` },
+    { node: el.storySuspicion, text: completed ? day.suspicionAfter : day.suspicionBefore, key: `hub-suspicion-${state.day}-${completed}` }
+  ], `hub-story-${state.day}-${completed}`, () => {
+    showReveal(el.planPanel, 120);
+    if (completed || state.planReady) {
+      showReveal(el.actionWrap, completed ? 160 : 300);
+    }
+  });
+  if (completed) {
+    if (state.day < 5) {
+      el.actionTitle.textContent = getProgressButtonText();
+      el.actionDesc.textContent = "不用再回头复盘，直接带着这条发现推进下一天。";
+    } else {
+      el.actionTitle.textContent = getProgressButtonText();
+      el.actionDesc.textContent = "今天的整理已经完成，可以查看这次调查最后得到的判断。";
+    }
+  } else {
+    el.actionTitle.textContent = day.actionTitle;
+    el.actionDesc.textContent = day.actionDesc;
+  }
+  if (!completed && !state.planReady) {
+    el.actionWrap.classList.remove("show");
+    el.actionWrap.style.visibility = "hidden";
+  } else {
+    el.actionWrap.style.visibility = "visible";
+  }
+}
+
+function renderScene() {
+  const day = currentDay();
+  const scene = day.scene;
+  setPageStage(el.scenePage, state.actionCompleted ? "scene-result" : "action");
+  setPlainText(el.sceneTopline, state.actionCompleted ? day.toplineAfter : day.toplineBefore, `scene-topline-${state.day}-${state.actionCompleted}`);
+  el.sceneDayTag.textContent = state.actionCompleted ? `${day.title} · 已发现` : `${day.title} · 行动中`;
+  el.sceneDayTag.className = `pill ${state.actionCompleted ? "phase-pill-result" : "phase-pill-action"}`;
+  el.sceneTitle.textContent = scene.title;
+  el.sceneSub.textContent = scene.subtitle;
+  prepareReveal(el.sceneObjectCard, true);
+  typeParagraphs(el.sceneNarrative, scene.narrative, `scene-narrative-${state.day}`, () => showReveal(el.sceneObjectCard, 120));
+  el.sceneObjectTitle.textContent = scene.objectTitle;
+  setPlainText(el.sceneObjectDesc, scene.objectDesc, `scene-object-${state.day}`);
+  el.sceneStartTaskBtn.style.display = (!state.sceneQuestionOpen && !state.sceneRetryVisible && !state.actionCompleted) ? "inline-flex" : "none";
+  el.sceneTaskWrap.innerHTML = "";
+  el.sceneResultWrap.innerHTML = "";
+
+  if (state.sceneQuestionOpen && !state.actionCompleted) {
+    el.sceneTaskWrap.innerHTML = `
+      <div class="question-card pop-in result-spotlight">
+        <div class="question-intro">${scene.questionIntro}</div>
+        <div class="question-title">${scene.questionTitle}</div>
+        <div class="option-list">
+          ${scene.choices.map((choice, index) => `
+            <button class="option-btn" data-scene-choice="${index}">
+              <strong>${choice.label}</strong>
+              <span>${choice.text}</span>
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  if (state.sceneRetryVisible && !state.actionCompleted) {
+    el.sceneTaskWrap.innerHTML = `
+      <div class="result-box pop-in result-spotlight">
+        <h4>这一步还不够硬</h4>
+        ${scene.wrongFeedback.map((text) => `<p>${text}</p>`).join("")}
+        <button class="btn btn-secondary" data-scene-retry="1">重新判断</button>
+      </div>
+    `;
+  }
+
+  if (state.actionCompleted) {
+    el.sceneResultWrap.innerHTML = buildResultBox(day.resultTitle, day.resultParagraphs, getProgressButtonText(), "scene-finish");
+  }
+}
+
+function renderDialogue() {
+  const day = currentDay();
+  const dialogue = day.dialogue;
+  const step = dialogue.steps[state.dialogueStep];
+  setPageStage(el.dialoguePage, state.actionCompleted ? "dialogue-result" : "action");
+  setPlainText(el.dialogueTopline, state.actionCompleted ? day.toplineAfter : day.toplineBefore, `dialogue-topline-${state.day}-${state.actionCompleted}`);
+  el.dialogueDayTag.textContent = state.actionCompleted ? `${day.title} · 已发现` : `${day.title} · 行动中`;
+  el.dialogueDayTag.className = `pill ${state.actionCompleted ? "phase-pill-result" : "phase-pill-action"}`;
+  el.dialogueTitle.textContent = dialogue.title;
+  el.dialogueSub.textContent = dialogue.subtitle;
+  typeParagraphs(el.dialogueNarrative, dialogue.narrative, `dialogue-narrative-${state.day}`);
+  renderDialogueHistory();
+  setPlainText(el.dialogueText, step.baseText, `dialogue-base-${state.day}-${state.dialogueStep}`);
+  el.dialogueChoices.innerHTML = "";
+  el.dialogueResultWrap.innerHTML = "";
+
+  if (!state.actionCompleted) {
+    if (state.dialogueInterlude) {
+      const choice = step.choices[state.dialogueInterlude - 1];
+      el.dialogueResultWrap.innerHTML = `
+        <div class="result-box dialogue-result pop-in result-spotlight">
+          ${speechBubble("你", choice.text, "you")}
+          ${speechBubble("对方", choice.response, "other")}
+          <button class="btn btn-primary" data-dialogue-next="1">继续追问</button>
+        </div>
+      `;
+    } else {
+      el.dialogueChoices.innerHTML = `
+        <div class="question-card pop-in result-spotlight">
+          <div class="question-intro">${step.prompt}</div>
+          <div class="option-list">
+            ${step.choices.map((choice, index) => `
+              <button class="option-btn option-btn-you" data-dialogue-choice="${index}">
+                <span class="speaker">你</span>
+                <strong>${choice.text}</strong>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (state.actionCompleted) {
+    el.dialogueResultWrap.innerHTML = `
+      <div class="result-box dialogue-result result-spotlight pop-in">
+        <span class="result-kicker">新的口供</span>
+        <h4>${day.resultTitle}</h4>
+        ${step.finalText.map((text) => `<p>${text}</p>`).join("")}
+        ${day.resultParagraphs.map((text) => `<p>${text}</p>`).join("")}
+        <button class="btn btn-primary result-next" data-result-action="dialogue-finish">${getProgressButtonText()}</button>
+      </div>
+    `;
+  }
+}
+
+function renderBoard() {
+  const day = currentDay();
+  const board = day.board;
+  setPageStage(el.boardPage, state.actionCompleted ? "board-result" : "action");
+  setPlainText(el.boardTopline, state.actionCompleted ? day.toplineAfter : day.toplineBefore, `board-topline-${state.day}-${state.actionCompleted}`);
+  el.boardPage.querySelector(".pill").className = `pill ${state.actionCompleted ? "phase-pill-result" : "phase-pill-action"}`;
+  el.boardPage.querySelector(".pill").textContent = state.actionCompleted ? "最后发现" : "行动中";
+  typeParagraphs(el.boardIntro, board.intro, `board-intro-${state.day}`);
+  el.boardGroups.innerHTML = board.groups.map((group) => {
+    const selectedId = state.boardSelections[group.key];
+    const selected = group.options.find((item) => item.id === selectedId);
+    return `
+      <div class="board-group">
+        <div class="board-title">命题</div>
+        <h4>${group.title}</h4>
+        <p>${group.hint}</p>
+        <div class="fact">${selected ? `已放入：${selected.title}` : "尚未放入关键材料。"}</div>
+      </div>
+    `;
+  }).join("");
+  el.boardChoices.innerHTML = "";
+  el.boardResultWrap.innerHTML = state.boardMessage ? `<div class="result-box pop-in result-spotlight"><h4>系统反馈</h4><p>${state.boardMessage}</p></div>` : "";
+
+  if (state.actionCompleted) {
+    el.boardResultWrap.innerHTML = `
+      <div class="result-box result-spotlight pop-in">
+        <span class="result-kicker">结论闭合</span>
+        <h4>${day.resultTitle}</h4>
+        ${buildLogicMap(board)}
+        <button class="btn btn-primary" data-result-action="board-finish">查看最终结论</button>
+      </div>
+    `;
+    return;
+  }
+
+  const pending = board.groups.find((group) => !state.boardSelections[group.key]);
+  if (!pending) {
+    completeBoard();
+    return;
+  }
+
+  el.boardChoices.innerHTML = `
+    <div class="question-card pop-in result-spotlight">
+      <div class="question-intro">现在先补这一条</div>
+      <div class="question-title">${pending.title}</div>
+      <div class="choice-note">${pending.hint}</div>
+      <div class="option-list" style="margin-top:14px;">
+        ${pending.options.map((option) => `
+          <button class="evidence-btn" data-board-group="${pending.key}" data-board-option="${option.id}">
+            <strong>${option.title}</strong>
+            <span>${option.text}</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  applyTheme();
+  if (state.page === "briefing") renderBriefing();
+  if (state.page === "hub") renderHub();
+  if (state.page === "scene") renderScene();
+  if (state.page === "dialogue") renderDialogue();
+  if (state.page === "board") renderBoard();
+}
+
+function startGame() {
+  state = initState();
+  clearState();
+  switchPage("hub");
+  saveState();
+  renderAll();
+}
+
+function openMainAction() {
+  if (state.actionCompleted) {
+    if (state.day < 5) completeDay();
+    else showEnding();
+    return;
+  }
+  if (!state.planReady) return;
+  const day = currentDay();
+  if (day.mode === "scene") {
+    state.sceneQuestionOpen = false;
+    state.sceneRetryVisible = false;
+    switchPage("scene");
+    renderScene();
+  } else if (day.mode === "dialogue") {
+    state.dialogueStep = 0;
+    state.dialogueInterlude = false;
+    state.dialogueLastChoice = "";
+    state.dialogueLastResponse = "";
+    state.dialogueHistory = [];
+    switchPage("dialogue");
+    renderDialogue();
+  } else if (day.mode === "board") {
+    switchPage("board");
+    renderBoard();
+  }
+  saveState();
+}
+
+function completeDay() {
+  if (state.day < 5) {
+    state.day += 1;
+    state.actionCompleted = false;
+    state.sceneQuestionOpen = false;
+    state.sceneRetryVisible = false;
+    state.dialogueStep = 0;
+    state.dialogueInterlude = false;
+    state.dialogueLastChoice = "";
+    state.dialogueLastResponse = "";
+    state.dialogueHistory = [];
+    state.briefingPlanReady = false;
+    state.planReady = false;
+    state.boardMessage = "";
+    state.page = "hub";
+    switchPage("hub");
+    renderAll();
+    saveState();
+    return;
+  }
+  showEnding();
+}
+
+function sceneChoose(index) {
+  const scene = currentDay().scene;
+  const choice = scene.choices[index];
+  const dayNum = state.day;
+  if (choice.correct) {
+    state.sceneQuestionOpen = false;
+    state.sceneRetryVisible = false;
+    if (dayNum === 1 && state.d1Score === 0) state.d1Score = 3;
+    else if (dayNum === 2 && state.d2Score === 0) state.d2Score = 3;
+    else if (dayNum === 4 && state.d4Score === 0) state.d4Score = 3;
+    addEvidence(currentDay().evidence || []);
+    showToast("你得到一条新发现");
+    state.actionCompleted = true;
+    renderScene();
+  } else {
+    state.sceneQuestionOpen = false;
+    state.sceneRetryVisible = true;
+    if (dayNum === 1 && state.d1Score === 0) state.d1Score = 1;
+    else if (dayNum === 2 && state.d2Score === 0) state.d2Score = 1;
+    else if (dayNum === 4 && state.d4Score === 0) state.d4Score = 1;
+    renderScene();
+  }
+  saveState();
+}
+
+function dialogueChoose(index) {
+  const dialogue = currentDay().dialogue;
+  const step = dialogue.steps[state.dialogueStep];
+  const choice = step.choices[index];
+  if (state.dialogueStep === 0) {
+    state.d3Round1 = index;
+    if (index === 0) state.d3OptimalCount += 1;
+  }
+  if (state.dialogueStep === 1 && index === 0) {
+    state.d3OptimalCount += 1;
+  }
+  if (state.dialogueStep === 2) {
+    if (index === 0) state.d3OptimalCount += 1;
+    state.d3Round3 = index;
+    if (state.d3Round1 === 1 && index === 0) {
+      state.leakTriggered = true;
+    }
+  }
+  if (state.dialogueStep === dialogue.steps.length - 1) {
+    state.dialogueLastChoice = choice.text;
+    state.dialogueLastResponse = choice.response;
+    state.dialogueHistory.push(
+      { label: "你", text: choice.text, side: "you", kind: "speech" },
+      { label: "对方", text: choice.response, side: "other", kind: "speech" }
+    );
+    addEvidence(currentDay().evidence || []);
+    showToast("你拿到一条口供");
+    state.actionCompleted = true;
+    renderDialogue();
+  } else {
+    state.dialogueInterlude = index + 1;
+    renderDialogue();
+  }
+  saveState();
+}
+
+function continueDialogue() {
+  const dialogue = currentDay().dialogue;
+  const step = dialogue.steps[state.dialogueStep];
+  const choice = step.choices[state.dialogueInterlude - 1];
+  if (choice) {
+    state.dialogueHistory.push(
+      { label: "你", text: choice.text, side: "you", kind: "speech" },
+      { label: "对方", text: choice.response, side: "other", kind: "speech" }
+    );
+  }
+  state.dialogueStep += 1;
+  state.dialogueInterlude = false;
+  renderDialogue();
+  saveState();
+}
+
+function chooseBoardOption(groupKey, optionId) {
+  const board = currentDay().board;
+  const group = board.groups.find((item) => item.key === groupKey);
+  const option = group.options.find((item) => item.id === optionId);
+  if (!option.correct) {
+    state.boardMessage = board.wrongText;
+    state.d5Retries += 1;
+    showToast("逻辑还没扣上");
+    renderBoard();
+    saveState();
+    return;
+  }
+  state.boardSelections[groupKey] = option.id;
+  state.boardMessage = `《${option.title}》已经能为“${group.title}”提供支撑。`;
+  renderBoard();
+  saveState();
+}
+
+function completeBoard() {
+  const day = currentDay();
+  state.actionCompleted = true;
+  renderBoard();
+  saveState();
+}
+
+function showEnding() {
+  const d3Score = state.d3OptimalCount >= 2 ? 3 : (state.d3OptimalCount >= 1 ? 2 : 1);
+  const d5Score = state.d5Retries === 0 ? 3 : 1;
+  const totalScore = state.d1Score + state.d2Score + d3Score + state.d4Score + d5Score;
+  let ending;
+  if (state.leakTriggered) {
+    ending = ENDINGS.C;
+  } else if (totalScore >= 12) {
+    ending = ENDINGS.A;
+  } else if (totalScore >= 7) {
+    ending = ENDINGS.B;
+  } else {
+    ending = ENDINGS.D;
+  }
+  state.ending = ending;
+  el.endingGrade.textContent = ending.grade;
+  el.endingTitle.textContent = ending.title;
+  el.endingBody.textContent = ending.body;
+  const facts = [...currentDay().dayEnd, ...ending.facts];
+  el.endingFacts.innerHTML = facts.map((text) => `<div class="fact">${text}</div>`).join("");
+  el.endingOverlay.classList.add("show");
+  saveState();
+}
+
+function restart() {
+  state = initState();
+  clearState();
+  switchPage("briefing");
+  renderAll();
+  el.endingOverlay.classList.remove("show");
+  showToast("新的调查已建立");
+}
+
+el.startBtn.addEventListener("click", startGame);
+el.briefingPlanBtn.addEventListener("click", () => {
+  state.briefingPlanReady = true;
+  renderBriefing();
+  showReveal(el.briefingTask, 80);
+  showReveal(el.briefingActions, 240);
+  saveState();
+});
+el.mainActionBtn.addEventListener("click", openMainAction);
+el.makePlanBtn.addEventListener("click", () => {
+  if (state.actionCompleted) {
+    if (state.day < 5) completeDay();
+    else showEnding();
+    return;
+  }
+  state.planReady = true;
+  renderHub();
+  showReveal(el.actionWrap, 80);
+  saveState();
+});
+el.planSummaryBtn.addEventListener("click", () => openSheet(SHEETS.summary.title, SHEETS.summary.items));
+el.sceneStartTaskBtn.addEventListener("click", () => {
+  state.sceneQuestionOpen = true;
+  state.sceneRetryVisible = false;
+  renderScene();
+  saveState();
+});
+el.sceneBackBtn.addEventListener("click", () => { switchPage("hub"); renderHub(); });
+el.dialogueBackBtn.addEventListener("click", () => { switchPage("hub"); renderHub(); });
+el.boardBackBtn.addEventListener("click", () => { switchPage("hub"); renderHub(); });
+el.openSummaryFromBriefing.addEventListener("click", () => openSheet(SHEETS.summary.title, SHEETS.summary.items));
+el.openSummaryBtn.addEventListener("click", () => openSheet(SHEETS.summary.title, SHEETS.summary.items));
+el.openCharacterBtn.addEventListener("click", () => openSheet(SHEETS.characters.title, SHEETS.characters.items));
+el.openRelationBtn.addEventListener("click", () => openSheet(SHEETS.relation.title, SHEETS.relation.items));
+el.openEvidenceBtn.addEventListener("click", () => {
+  const items = state.earnedEvidence.length ? state.earnedEvidence.map((item) => `${item.title}：${item.summary}`) : ["你手上还没有新的关键材料。先把今天这一步推进完。"];
+  openSheet("查看证据", items);
+});
+el.closeSheetBtn.addEventListener("click", () => el.sheetOverlay.classList.remove("show"));
+el.closeEndingBtn.addEventListener("click", () => el.endingOverlay.classList.remove("show"));
+el.restartBtn.addEventListener("click", restart);
+
+el.sceneTaskWrap.addEventListener("click", (event) => {
+  const choice = event.target.closest("[data-scene-choice]");
+  if (choice) {
+    sceneChoose(Number(choice.dataset.sceneChoice));
+    return;
+  }
+  const retry = event.target.closest("[data-scene-retry]");
+  if (retry) {
+    state.sceneQuestionOpen = true;
+    state.sceneRetryVisible = false;
+    renderScene();
+    saveState();
+  }
+});
+
+el.sceneResultWrap.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-result-action='scene-finish']");
+  if (btn) completeDay();
+});
+
+el.dialogueChoices.addEventListener("click", (event) => {
+  const choice = event.target.closest("[data-dialogue-choice]");
+  if (choice) dialogueChoose(Number(choice.dataset.dialogueChoice));
+});
+
+el.dialogueResultWrap.addEventListener("click", (event) => {
+  const next = event.target.closest("[data-dialogue-next]");
+  if (next) {
+    continueDialogue();
+    return;
+  }
+  const finish = event.target.closest("[data-result-action='dialogue-finish']");
+  if (finish) completeDay();
+});
+
+el.boardChoices.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-board-group]");
+  if (btn) chooseBoardOption(btn.dataset.boardGroup, btn.dataset.boardOption);
+});
+
+el.boardResultWrap.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-result-action='board-finish']");
+  if (btn) showEnding();
+});
+
+window.addEventListener("beforeunload", saveState);
+
+renderAll();
+</script>
+</body>
+</html>
